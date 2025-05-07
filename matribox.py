@@ -91,12 +91,26 @@ class Matribox:
 
         if knob_id == 1:
             message = mido.Message('control_change', channel=0, control=16, value=value)
-        if knob_id == 2:
+        elif knob_id == 2:
             message = mido.Message('control_change', channel=0, control=18, value=value)
-        if knob_id == 3:
+        elif knob_id == 3:
             message = mido.Message('control_change', channel=0, control=20, value=value)
         else:
             raise ValueError("knob_id must be [1-3]")
+        self.output_port.send(message)
+
+    def send_activate_effect(self, effect_id: int, activate: bool):
+        """
+        de/activate an effect on the current sound setting
+        :param activate:
+        :param effect_id: 1-12
+        :return:
+        """
+        if effect_id < 1 or effect_id > 12:
+            raise ValueError("effect_id must be [1-12]")
+        # todo check behaviour when the current sound setting has less effects than the effect ID
+
+        message = mido.Message('control_change', channel=0, control=42+effect_id, value=64 if activate else 0)
         self.output_port.send(message)
 
     def send_looper_play(self):
@@ -295,7 +309,13 @@ if __name__ == '__main__':
 
     # m.monitor_matribox_midi()
 
-    m.send_display_tuner(True)
+    for i in range(1, 13):
+        m.send_activate_effect(i, True)
+        sleep(5)
+    for i in range(1, 13):
+        m.send_activate_effect(i, False)
+        sleep(5)
+    # m.send_knob(3, 50)
     # m.send_display_screen_drum(True)
     # m.send_drum_tap(40)
     # m.send_footswitch_stomp_mode()
